@@ -35,6 +35,7 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.MBeanServer;
@@ -155,9 +156,9 @@ public class QuartzScheduler implements RemotableQuartzScheduler {
 
     private ListenerManager listenerManager = new ListenerManagerImpl();
     
-    private HashMap<String, JobListener> internalJobListeners = new HashMap<String, JobListener>(10);
+    private Map<String, JobListener> internalJobListeners = new ConcurrentHashMap<>();
 
-    private HashMap<String, TriggerListener> internalTriggerListeners = new HashMap<String, TriggerListener>(10);
+    private Map<String, TriggerListener> internalTriggerListeners = new ConcurrentHashMap<>();
 
     private ArrayList<SchedulerListener> internalSchedulerListeners = new ArrayList<SchedulerListener>(10);
 
@@ -1641,10 +1642,8 @@ J     *
             throw new IllegalArgumentException(
                     "JobListener name cannot be empty.");
         }
-        
-        synchronized (internalJobListeners) {
-            internalJobListeners.put(jobListener.getName(), jobListener);
-        }
+
+        internalJobListeners.put(jobListener.getName(), jobListener);
     }
 
     /**
@@ -1657,9 +1656,7 @@ J     *
      *         removed.
      */
     public boolean removeInternalJobListener(String name) {
-        synchronized (internalJobListeners) {
-            return (internalJobListeners.remove(name) != null);
-        }
+        return (internalJobListeners.remove(name) != null);
     }
     
     /**
@@ -1669,9 +1666,7 @@ J     *
      * </p>
      */
     public List<JobListener> getInternalJobListeners() {
-        synchronized (internalJobListeners) {
-            return java.util.Collections.unmodifiableList(new LinkedList<JobListener>(internalJobListeners.values()));
-        }
+        return java.util.Collections.unmodifiableList(new LinkedList<JobListener>(internalJobListeners.values()));
     }
 
     /**
@@ -1681,9 +1676,7 @@ J     *
      * </p>
      */
     public JobListener getInternalJobListener(String name) {
-        synchronized (internalJobListeners) {
-            return internalJobListeners.get(name);
-        }
+        return internalJobListeners.get(name);
     }
     
     /**
@@ -1699,9 +1692,7 @@ J     *
                     "TriggerListener name cannot be empty.");
         }
 
-        synchronized (internalTriggerListeners) {
-            internalTriggerListeners.put(triggerListener.getName(), triggerListener);
-        }
+        internalTriggerListeners.put(triggerListener.getName(), triggerListener);
     }
 
     /**
@@ -1714,9 +1705,7 @@ J     *
      *         removed.
      */
     public boolean removeinternalTriggerListener(String name) {
-        synchronized (internalTriggerListeners) {
-            return (internalTriggerListeners.remove(name) != null);
-        }
+        return (internalTriggerListeners.remove(name) != null);
     }
 
     /**
@@ -1726,9 +1715,7 @@ J     *
      * </p>
      */
     public List<TriggerListener> getInternalTriggerListeners() {
-        synchronized (internalTriggerListeners) {
-            return java.util.Collections.unmodifiableList(new LinkedList<TriggerListener>(internalTriggerListeners.values()));
-        }
+        return java.util.Collections.unmodifiableList(new LinkedList<TriggerListener>(internalTriggerListeners.values()));
     }
 
     /**
@@ -1738,9 +1725,7 @@ J     *
      * </p>
      */
     public TriggerListener getInternalTriggerListener(String name) {
-        synchronized (internalTriggerListeners) {
-            return internalTriggerListeners.get(name);
-        }
+        return internalTriggerListeners.get(name);
     }
 
     /**
@@ -2416,7 +2401,7 @@ class ErrorLogger extends SchedulerListenerSupport {
 /////////////////////////////////////////////////////////////////////////////
 
 class ExecutingJobsManager implements JobListener {
-    HashMap<String, JobExecutionContext> executingJobs = new HashMap<String, JobExecutionContext>();
+    Map<String, JobExecutionContext> executingJobs = new ConcurrentHashMap<>();
 
     AtomicInteger numJobsFired = new AtomicInteger(0);
 
@@ -2428,25 +2413,19 @@ class ExecutingJobsManager implements JobListener {
     }
 
     public int getNumJobsCurrentlyExecuting() {
-        synchronized (executingJobs) {
-            return executingJobs.size();
-        }
+        return executingJobs.size();
     }
 
     public void jobToBeExecuted(JobExecutionContext context) {
         numJobsFired.incrementAndGet();
 
-        synchronized (executingJobs) {
-            executingJobs
-                    .put(((OperableTrigger)context.getTrigger()).getFireInstanceId(), context);
-        }
+        executingJobs
+                .put(((OperableTrigger)context.getTrigger()).getFireInstanceId(), context);
     }
 
     public void jobWasExecuted(JobExecutionContext context,
             JobExecutionException jobException) {
-        synchronized (executingJobs) {
-            executingJobs.remove(((OperableTrigger)context.getTrigger()).getFireInstanceId());
-        }
+        executingJobs.remove(((OperableTrigger)context.getTrigger()).getFireInstanceId());
     }
 
     public int getNumJobsFired() {
@@ -2454,10 +2433,8 @@ class ExecutingJobsManager implements JobListener {
     }
 
     public List<JobExecutionContext> getExecutingJobs() {
-        synchronized (executingJobs) {
-            return java.util.Collections.unmodifiableList(new ArrayList<JobExecutionContext>(
-                    executingJobs.values()));
-        }
+        return java.util.Collections.unmodifiableList(new ArrayList<JobExecutionContext>(
+                executingJobs.values()));
     }
 
     public void jobExecutionVetoed(JobExecutionContext context) {
