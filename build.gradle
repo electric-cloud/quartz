@@ -30,11 +30,6 @@ allprojects {
     }
 
     plugins.withType(MavenPublishPlugin) {
-        plugins.apply(SigningPlugin)
-        signing {
-            required { !version.endsWith("SNAPSHOT") }
-            sign publishing.publications
-        }
 
         publishing {
             configurations {
@@ -53,9 +48,9 @@ allprojects {
                             }
                         }
                         scm {
-                            connection = 'scm:git:git://github.com:quartz-scheduler/quartz.git'
-                            developerConnection = 'scm:git:ssh:git@github.com:quartz-scheduler/quartz.git'
-                            url = 'https://github.com/quartz-scheduler/quartz'
+                            connection = 'scm:git:git://github.com:electric-cloud/quartz.git'
+                            developerConnection = 'scm:git:ssh:git@github.com:electric-cloud/quartz.git'
+                            url = 'https://github.com/electric-cloud/quartz'
                         }
                         developers {
                             developer {
@@ -133,6 +128,13 @@ allprojects {
 
 nexusPublishing {
     repositories {
-        sonatype()
+        sonatype {
+            // To get the values for username and password, please refer to the following link:
+            // https://nexus-internal.cloudbees.com/#profile (Select the "User Token" tab and button "Access Token"
+            username = 'OVERRIDE_ME'
+            password = 'OVERRIDE_ME'
+            stagingProfileId = '7a7e874f6c38' // Staging profile ID
+            nexusUrl = uri('https://nexus-internal.cloudbees.com/service/local/') // CloudBees Internal Nexus URI
+        }
     }
 }

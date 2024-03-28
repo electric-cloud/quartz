@@ -9,7 +9,7 @@ repositories {
 
 publishing {
     publications {
-        getByName('maven').pom.description = 'Quartz Enterprise Job Scheduler'
+        getByName('maven').pom.description = 'Quartz Enterprise Job Scheduler with custom CloudBees patches'
     }
 }
 
